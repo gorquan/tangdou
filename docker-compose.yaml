@@ -1,0 +1,41 @@
+version: "3.5"
+
+services: 
+  rabbitmq-management:
+    build: ./rabbitmq-management
+    container_name: rabbitmq-management-container
+    ports: 
+      - "4369:4369"
+      - "5671:5671"
+      - "5672:5672"
+      - "15671:15671"
+      - "15672:15672"
+      - "25672:25672"
+    networks: 
+      scrapy-networks:
+  coolq:
+    image: richardchien/cqhttp:latest
+    container_name: coolq-container
+    volumes: 
+      - ./coolq:/home/user/coolq
+    ports: 
+      - '9000:9000'
+      - '5700:5700'
+      - '5800:5800'
+    environment: 
+      - COOLQ_ACCOUNT=123456
+      - CQHTTP_USE_WS=true
+      - CQHTTP_WS_HOST=0.0.0.0
+      - CQHTTP_WS_PORT=5800
+      - CQHTTP_LOG_LEVEL=debug
+      - CQHTTP_SERVE_DATA_FILES=yes
+      - VNC_PASSWD=123456
+    networks:
+      scrapy-networks:
+
+networks: 
+  scrapy-networks:
+    name: scrapy-networks
+    driver: bridge
+    
+    
