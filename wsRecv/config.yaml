@@ -1,0 +1,14 @@
+version: 1
+rabbitmq:
+  host: '127.0.0.1'
+  port: 5672
+  exchange: ''
+  exchange_type: 'direct'
+  user: 'user'
+  password: '123456'
+  virtual_host: '/'
+  queue: 'test'
+websocket:
+  host: '127.0.0.1'
+  port: 5800
+  uri: '/event/'

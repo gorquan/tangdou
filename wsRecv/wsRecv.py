@@ -14,14 +14,15 @@ import html
 
 log = ''
 
+Config = ''
 
-def setLog(filename):
+
+def setLog(baseDir, filename):
     '''
     To set log
     :param filename: logging config filename
     :return:
     '''
-    baseDir = os.path.dirname(os.path.abspath(__file__))
     logConfigPath = baseDir + '/' + filename
     try:
         global log
@@ -36,6 +37,22 @@ def setLog(filename):
             log = logging.getLogger("wsclientLog")
             log.info("set default success..")
     except IOError:
+        exit(1)
+
+def setConfig(baseDir, filename):
+    '''
+    To get Config
+    :param filename: config filename
+    :return:
+    '''
+    configPath = baseDir + '/' + filename
+    try:
+        with open(configPath, 'r') as f:
+            global Config
+            Config = yaml.load(f.read())
+        log.debug("load the config success...")
+    except IOError as e:
+        log.error("load the config error! the reason: %s" % e)
         exit(1)
 
 def outputMessage(ws,message):
@@ -58,7 +75,7 @@ def outputClose(ws):
 def initConnect():
     try:
         websocket.enableTrace(True)
-        ws = websocket.WebSocketApp("ws://127.0.0.1:5800/event/",
+        ws = websocket.WebSocketApp("ws://" + Config['websocket']['host'] + ':' + str(Config['websocket']['port']) + Config['websocket']['uri'],
                                     on_message = outputMessage,
                                     on_error = outputError,
                                     on_close = outputClose)
@@ -84,8 +101,8 @@ class MQSender(MQBase):
     
 
 def producer(message):
-    sender = MQSender(host="127.0.0.1",port=5672,exchange="",exchange_type="direct",user='user', password='123456',virtualhost = '/', queue = 'test')
-    sender.send('test', message)
+    sender = MQSender(host=Config['rabbitmq']['host'],port=Config['rabbitmq']['port'],exchange=Config['rabbitmq']['exchange'],exchange_type=Config['rabbitmq']['exchange_type'],user=Config['rabbitmq']['user'], password=Config['rabbitmq']['password'],virtualhost = Config['rabbitmq']['virtual_host'], queue = Config['rabbitmq']['queue'])
+    sender.send(Config['rabbitmq']['queue'], message)
 
 def formatMessage(message):
     messageJson = {}
@@ -170,5 +187,7 @@ def formatMessage(message):
 
 
 if __name__ == "__main__":
-    setLog("logConfig.yaml")
+    baseDir = os.path.dirname(os.path.abspath(__file__))
+    setLog(baseDir, "logConfig.yaml")
+    setConfig(baseDir, 'config.yaml')
     initConnect()
