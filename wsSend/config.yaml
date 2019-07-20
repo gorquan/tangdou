@@ -1,4 +1,8 @@
 version: 1
+websocket: 
+  host: '127.0.0.1'
+  port: 5800
+  uri: '/api/'
 rabbitmq:
   host: '127.0.0.1'
   port: 5672
@@ -6,9 +10,6 @@ rabbitmq:
   exchange_type: 'direct'
   user: 'user'
   password: '123456'
-  virtual_host: '/'
+  virtualhost: '/'
   queue: 'messageRecvQueue'
-websocket:
-  host: '127.0.0.1'
-  port: 5800
-  uri: '/event/'
+  prefetch_count: 1

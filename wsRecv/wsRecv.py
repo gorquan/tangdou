@@ -79,8 +79,8 @@ def initConnect():
                                     on_message = outputMessage,
                                     on_error = outputError,
                                     on_close = outputClose)
-        ws.run_forever()
         log.info("start the websocket connection success")
+        ws.run_forever()
     except Exception as e:
         log.error("cant init the websocket connection, the reason is %s" % e)
 
@@ -90,8 +90,10 @@ class MQSender(MQBase):
         def sendMessage():
             try:
                 self.open_channel()
-                success = self.channel.basic_publish(exchange=self.exchange,routing_key=route,body=msg,properties=self.proprties)
-            except:
+                self.channel.basic_publish(exchange=self.exchange,routing_key=route,body=msg,properties=self.proprties)
+                success = True
+            except Exception as e:
+                log.error("cant save the message to server,the reason is: %s" % e)
                 success = False
             return success
         result = sendMessage() or sendMessage()

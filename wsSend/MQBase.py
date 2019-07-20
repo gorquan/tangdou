@@ -49,7 +49,7 @@ class MQBase(object):
             self.channel.exchange_declare(exchange=self.exchange,exchange_type=self.exchange_type,durable=self.persist)
             # 声明队列
             self.channel.queue_declare(queue=self.queue,durable=self.persist)
-            # 绑定队列和交换机，使用默认交换机会报403
+            # 绑定队列和交换机
             self.channel.queue_bind(queue=self.queue,exchange=self.exchange,routing_key=self.queue)
             # 开启手动确认
             if self.ack:
