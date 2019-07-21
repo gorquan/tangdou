@@ -20,6 +20,7 @@ Config = ''
 # websocket client
 wsApp = ''
 
+
 def setLog(baseDir, filename):
     '''
     To set log
@@ -42,6 +43,7 @@ def setLog(baseDir, filename):
     except IOError:
         exit(1)
 
+
 def setConfig(baseDir, filename):
     '''
     To get Config
@@ -58,37 +60,45 @@ def setConfig(baseDir, filename):
         log.error("load the config error! the reason: %s" % e)
         exit(1)
 
-def sendMessage(message,rabbitmqConn,channel,ack_tag):
+
+def sendMessage(message, rabbitmqConn, channel, ack_tag):
     try:
-        ws = websocket.create_connection("ws://" + Config['websocket']['host'] + ':' + str(Config['websocket']['port']) + Config['websocket']['uri'])
+        ws = websocket.create_connection("ws://" + Config['websocket']['host'] + ':' + str(
+            Config['websocket']['port']) + Config['websocket']['uri'])
         count = 0
         while True:
             ws.send(str(json.dumps(message)))
             result = json.loads(ws.recv())
             if result['status'] == 'ok':
-                log.info("message send success! the message id %s" % result['data']['message_id'])
-                rabbitmqConn.add_callback_threadsafe(partial(channel.basic_ack,ack_tag))
+                log.info("message send success! the message id %s" %
+                         result['data']['message_id'])
+                rabbitmqConn.add_callback_threadsafe(
+                    partial(channel.basic_ack, ack_tag))
                 ws.close
                 break
             # TODO:限定次数
-            log.info("the message : %s ,send error, send message again..." % message)
+            log.info(
+                "the message : %s ,send error, send message again..." % message)
     except Exception as e:
         log.error("cant send the websocket data, the reason is %s" % e)
 
 
 class MQReceive(MQBase):
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         # 判断状态
         self.has_start = False
         # 声明消息接受条数
-        self.prefetch_count = kwargs.get('prefetch_count',Config['rabbitmq']['prefetch_count'])
+        self.prefetch_count = kwargs.get(
+            'prefetch_count', Config['sendRabbitmq']['prefetch_count'])
         # queue队列
         self.receive_queue = Queue(self.prefetch_count)
-        super().__init__(*args,**kwargs)
-    def setQueue(self,queue_name):
+        super().__init__(*args, **kwargs)
+
+    def setQueue(self, queue_name):
+        # Todo: try... except
         self.channel.basic_qos(prefetch_count=self.prefetch_count)
         self.channel.basic_consume(on_message_callback=self.handle,
-                                    queue=queue_name)
+                                   queue=queue_name)
         return True
 
     def start(self, queue_name):
@@ -96,31 +106,30 @@ class MQReceive(MQBase):
         if self.setQueue(queue_name):
             self.channel.start_consuming()
 
-    def handle(self,channel,method,properties,body):
-        self.receive_queue.put((body,self.conn,channel,method.delivery_tag))
-        
+    def handle(self, channel, method, properties, body):
+        self.receive_queue.put((body, self.conn, channel, method.delivery_tag))
+
     def clear(self):
         self.receive_queue = Queue(self.prefetch_count)
         super().clear()
 
 
 def consumer(receive):
-    receive.start(Config['rabbitmq']['queue'])
+    receive.start(Config['sendRabbitmq']['queue'])
+
 
 def deal_message(receive):
     while True:
         msg, conn, channel, ack_tag = receive.receive_queue.get()
-        message = msg.decode('utf8',errors='ignore')
-        sendMessage(message,conn,channel,ack_tag)
+        message = msg.decode('utf8', errors='ignore')
+        sendMessage(message, conn, channel, ack_tag)
 
 
 if __name__ == "__main__":
     baseDir = os.path.dirname(os.path.abspath(__file__))
-    setLog(baseDir,'logConfig.yaml')
-    setConfig(baseDir,'config.yaml')
-    receive = MQReceive(host=Config['rabbitmq']['host'],port=Config['rabbitmq']['port'],exchange=Config['rabbitmq']['exchange'],exchange_type=Config['rabbitmq']['exchange_type'],user=Config['rabbitmq']['user'],password=Config['rabbitmq']['password'],virtualhost=Config['rabbitmq']['virtualhost'],queue=Config['rabbitmq']['queue'])
-    threading.Thread(target=consumer,args=(receive,)).start()
-    threading.Thread(target=deal_message,args=(receive,)).start()
-    
-    
-
+    setLog(baseDir, 'logConfig.yaml')
+    setConfig(baseDir, 'config.yaml')
+    receive = MQReceive(host=Config['sendRabbitmq']['host'], port=Config['sendRabbitmq']['port'], exchange=Config['sendRabbitmq']['exchange'], exchange_type=Config['sendRabbitmq']['exchange_type'],
+                        user=Config['sendRabbitmq']['user'], password=Config['sendRabbitmq']['password'], virtualhost=Config['sendRabbitmq']['virtualhost'], queue=Config['sendRabbitmq']['queue'])
+    threading.Thread(target=consumer, args=(receive,)).start()
+    threading.Thread(target=deal_message, args=(receive,)).start()

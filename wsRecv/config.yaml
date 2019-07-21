@@ -1,14 +1,14 @@
 version: 1
-rabbitmq:
-  host: '127.0.0.1'
+receiveRabbitmq:
+  host: "127.0.0.1"
   port: 5672
-  exchange: 'messageRecv'
-  exchange_type: 'direct'
-  user: 'user'
-  password: '123456'
-  virtual_host: '/'
-  queue: 'messageRecvQueue'
+  exchange: "messageRecv"
+  exchange_type: "direct"
+  user: "user"
+  password: "123456"
+  virtual_host: "/"
+  queue: "messageRecvQueue"
 websocket:
-  host: '127.0.0.1'
+  host: "127.0.0.1"
   port: 5800
-  uri: '/event/'
+  uri: "/event/"

@@ -39,6 +39,7 @@ def setLog(baseDir, filename):
     except IOError:
         exit(1)
 
+
 def setConfig(baseDir, filename):
     '''
     To get Config
@@ -55,17 +56,21 @@ def setConfig(baseDir, filename):
         log.error("load the config error! the reason: %s" % e)
         exit(1)
 
-def outputMessage(ws,message):
+
+def outputMessage(ws, message):
     try:
         message = formatMessage(message)
         log.info("format message success! the message is %s" % message)
-        Thread(target=producer,args=(str(message), )).start()
-        log.debug("recive the message, start a thread to save in the rabbitmq server")
+        Thread(target=producer, args=(str(message), )).start()
+        log.debug(
+            "recive the message, start a thread to save in the rabbitmq server")
     except Exception as e:
         log.error("cant start the thread, the reason is %s" % e)
 
-def outputError(ws,message):
+
+def outputError(ws, message):
     log.error(message)
+
 
 def outputClose(ws):
     log.info("close the websocket connection, and then will reconnect")
@@ -76,9 +81,9 @@ def initConnect():
     try:
         websocket.enableTrace(True)
         ws = websocket.WebSocketApp("ws://" + Config['websocket']['host'] + ':' + str(Config['websocket']['port']) + Config['websocket']['uri'],
-                                    on_message = outputMessage,
-                                    on_error = outputError,
-                                    on_close = outputClose)
+                                    on_message=outputMessage,
+                                    on_error=outputError,
+                                    on_close=outputClose)
         log.info("start the websocket connection success")
         ws.run_forever()
     except Exception as e:
@@ -86,31 +91,35 @@ def initConnect():
 
 
 class MQSender(MQBase):
-    def send(self,route,msg):
+    def send(self, route, msg):
         def sendMessage():
             try:
                 self.open_channel()
-                self.channel.basic_publish(exchange=self.exchange,routing_key=route,body=msg,properties=self.proprties)
+                self.channel.basic_publish(
+                    exchange=self.exchange, routing_key=route, body=msg, properties=self.proprties)
                 success = True
             except Exception as e:
-                log.error("cant save the message to server,the reason is: %s" % e)
+                log.error(
+                    "cant save the message to server,the reason is: %s" % e)
                 success = False
             return success
         result = sendMessage() or sendMessage()
         if not result:
             self.clear()
         return result
-    
+
 
 def producer(message):
-    sender = MQSender(host=Config['rabbitmq']['host'],port=Config['rabbitmq']['port'],exchange=Config['rabbitmq']['exchange'],exchange_type=Config['rabbitmq']['exchange_type'],user=Config['rabbitmq']['user'], password=Config['rabbitmq']['password'],virtualhost = Config['rabbitmq']['virtual_host'], queue = Config['rabbitmq']['queue'])
-    sender.send(Config['rabbitmq']['queue'], message)
+    sender = MQSender(host=Config['receiveRabbitmq']['host'], port=Config['receiveRabbitmq']['port'], exchange=Config['receiveRabbitmq']['exchange'], exchange_type=Config['receiveRabbitmq']['exchange_type'],
+                      user=Config['receiveRabbitmq']['user'], password=Config['receiveRabbitmq']['password'], virtualhost=Config['receiveRabbitmq']['virtual_host'], queue=Config['receiveRabbitmq']['queue'])
+    sender.send(Config['receiveRabbitmq']['queue'], message)
+
 
 def formatMessage(message):
     messageJson = {}
     message = html.unescape(message)
     message = message.replace('\\"', '')
-    message = message.replace("'",'"') 
+    message = message.replace("'", '"')
     message = eval(message)
     messageJson['post_type'] = message['post_type']
     messageJson['user_id'] = message['user_id']
@@ -128,21 +137,25 @@ def formatMessage(message):
                     messageJson['msg_body_type'] = 'Shared'
                     messagebody = (messagebody.split(',content='))[1]
                     messagebody = (messagebody.split(',title='))[0]
-                    messageJson['SharedTitle'] = (messagebody.split(',desc:'))[0].lstrip("{news:{title:")
-                    messageJson['SharedTag'] = (((messagebody.split(',tag:'))[1]).split(',jumpUrl'))[0]
-                    messageJson['SharedJumpurl'] = (((messagebody.split(',jumpUrl:'))[1]).split(',appid:'))[0]
+                    messageJson['SharedTitle'] = (messagebody.split(',desc:'))[
+                        0].lstrip("{news:{title:")
+                    messageJson['SharedTag'] = (
+                        ((messagebody.split(',tag:'))[1]).split(',jumpUrl'))[0]
+                    messageJson['SharedJumpurl'] = (
+                        ((messagebody.split(',jumpUrl:'))[1]).split(',appid:'))[0]
                 # 文档
                 elif messagebody.startswith('CQ:rich,text='):
                     messageJson['msg_body_type'] = 'Document'
                     messagebody = messagebody.split(',')
-                    messageJson['DocumentText'] = messagebody[1].lstrip('text=')
+                    messageJson['DocumentText'] = messagebody[1].lstrip(
+                        'text=')
                     messageJson['DocumentUrl'] = messagebody[2].lstrip('url=')
             # 图片
             elif messagebody.startswith('CQ:image'):
                 messageJson['msg_body_type'] = 'Image'
                 messagebody = messagebody.split(',')
                 messageJson['ImageFile'] = messagebody[1].lstrip('file=')
-                messageJson['ImageUrl'] = messagebody[2].lstrip('url=') 
+                messageJson['ImageUrl'] = messagebody[2].lstrip('url=')
             # 语音
             elif messagebody.startswith('CQ:record'):
                 messageJson['msg_body_type'] = 'Record'
@@ -162,7 +175,8 @@ def formatMessage(message):
             elif messagebody.startswith('CQ:location'):
                 messageJson['msg_body_type'] = 'Location'
                 messagebody = messagebody.split(',')
-                messageJson['LocationContent'] = (messagebody[1]).lstrip('content=')
+                messageJson['LocationContent'] = (
+                    messagebody[1]).lstrip('content=')
                 messageJson['LocationLat'] = (messagebody[2]).lstrip('lat=')
                 messageJson['LocationLon'] = (messagebody[3]).lstrip('lon=')
             # 名片
@@ -182,6 +196,7 @@ def formatMessage(message):
     # 好友请求信息
     elif message['post_type'] == 'request':
         messageJson['comment'] = message['comment']
+        messageJson['flag'] == message['flag']
     # 其他信息
     else:
         pass

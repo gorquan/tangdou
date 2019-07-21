@@ -1,15 +1,15 @@
 version: 1
-websocket: 
-  host: '127.0.0.1'
+websocket:
+  host: "127.0.0.1"
   port: 5800
-  uri: '/api/'
-rabbitmq:
-  host: '127.0.0.1'
+  uri: "/api/"
+sendRabbitmq:
+  host: "127.0.0.1"
   port: 5672
-  exchange: 'messageRecv'
-  exchange_type: 'direct'
-  user: 'user'
-  password: '123456'
-  virtualhost: '/'
-  queue: 'messageRecvQueue'
+  exchange: "messageRecv"
+  exchange_type: "direct"
+  user: "user"
+  password: "123456"
+  virtualhost: "/"
+  queue: "messageRecvQueue"
   prefetch_count: 1
