@@ -20,4 +20,4 @@ handlers:
 loggers:
   wsclientLog:
     level: DEBUG
-    handlers: [info,debug,error]
+    handlers: [info, debug, error]
