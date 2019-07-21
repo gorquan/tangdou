@@ -1,0 +1,20 @@
+version: 1
+receiveRabbitmq:
+  host: "127.0.0.1"
+  port: 5672
+  exchange: "messageRecv"
+  exchange_type: "direct"
+  user: "user"
+  password: "123456"
+  virtual_host: "/"
+  queue: "messageRecvQueue"
+  prefetch_count: 1
+sendRabbitmq:
+  host: "127.0.0.1"
+  port: 5672
+  exchange: "messageSend"
+  exchange_type: "direct"
+  user: "user"
+  password: "123456"
+  virtual_host: "/"
+  queue: "messageSendQueue"

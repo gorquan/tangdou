@@ -1,0 +1,23 @@
+version: 1
+formatters:
+  simple:
+    format: "%(levelname)s - %(asctime)s - %(filename)s - %(funcName)s - %(lineno)s - %(thread)s - %(threadName)s - %(process)s - %(message)s"
+handlers:
+  info:
+    class: logging.StreamHandler
+    formatter: simple
+    level: INFO
+  debug:
+    class: logging.StreamHandler
+    formatter: simple
+    level: DEBUG
+  error:
+    class: logging.handlers.RotatingFileHandler
+    formatter: simple
+    level: ERROR
+    filename: error.log
+    encoding: utf8
+loggers:
+  wsclientLog:
+    level: DEBUG
+    handlers: [info, debug, error]

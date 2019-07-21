@@ -6,10 +6,10 @@ websocket:
 sendRabbitmq:
   host: "127.0.0.1"
   port: 5672
-  exchange: "messageRecv"
+  exchange: "messageSend"
   exchange_type: "direct"
   user: "user"
   password: "123456"
   virtualhost: "/"
-  queue: "messageRecvQueue"
+  queue: "messageSendQueue"
   prefetch_count: 1

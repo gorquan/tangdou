@@ -65,9 +65,8 @@ def sendMessage(message, rabbitmqConn, channel, ack_tag):
     try:
         ws = websocket.create_connection("ws://" + Config['websocket']['host'] + ':' + str(
             Config['websocket']['port']) + Config['websocket']['uri'])
-        count = 0
         while True:
-            ws.send(str(json.dumps(message)))
+            ws.send(message)
             result = json.loads(ws.recv())
             if result['status'] == 'ok':
                 log.info("message send success! the message id %s" %
