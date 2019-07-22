@@ -13,3 +13,5 @@ sendRabbitmq:
   virtualhost: "/"
   queue: "messageSendQueue"
   prefetch_count: 1
+sendCount:
+  count: 5
