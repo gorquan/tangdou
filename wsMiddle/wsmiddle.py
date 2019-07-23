@@ -71,56 +71,64 @@ def consumer(receiver, queue, log):
         log.error("the receiving end cant start. the reason is:%s" % e)
 
 
-def getMsg(reveiver, sender, log):
+def getMsg(reveiver, sender, queue, log):
     while True:
         recvMsg, recvConn, recvChannel, recvAck_tag = reveiver.revice_queue.get()
         message = recvMsg.decode('utf8', errors='ignore')
         log.info(
             'get message! message is %s, then will deal with new thread..' % message)
         threading.Thread(target=dealMsg, args=(
-            message, recvConn, recvChannel, recvAck_tag, sender, log,)).start()
+            message, recvConn, recvChannel, recvAck_tag, sender, queue, log,)).start()
 
 
 def dealMsg(recvMsg, recvConn, recvChannel, recvAck_tag, sender, queue, log):
     messageList = ast.literal_eval(recvMsg)
     postType = messageList['post_type']
-    msgType = messageList['msg_body_type']
-    if postType == 'request':
-        import requestMsg
-        rMsg = requestMsg.RequestMsg(
-            messageList['comment'], messageList['flag'])
-        replyMessage = rMsg.accept()
-    elif postType == 'message':
-        if msgType == 'Shared':
-            import messageShared
-            msgShared = messageShared.SharedMessage(
-                messageList['SharedTag'], messageList['SharedTitle'], messageList['SharedJumpurl'], messageList['user_id'])
-            replyMessage = msgShared.sendMessage()
-        elif msgType == 'Document':
-            pass
-        elif msgType == 'Image':
-            pass
-        elif msgType == 'Record':
-            pass
-        elif msgType == 'Face':
-            pass
-        elif msgType == 'Shake':
-            pass
-        elif msgType == 'Location':
-            pass
-        elif msgType == 'Contact':
-            pass
-        elif msgType == 'Show':
-            pass
-        elif msgType == 'Text':
-            import message
-            msgText = message.Message(
-                messageList['user_id'], messageList['message'])
-            replyMessage = msgText.sendMessage()
-    log.info(
-        "deal message success, the message is: %s, will send to queue..." % replyMessage)
-    SendMsg(replyMessage, recvConn, recvChannel,
-            recvAck_tag, sender, queue, log)
+    user_id = messageList['user_id']
+    if postType == '' or user_id == '':
+        recvConn.add_callback_threadsafe(recvChannel.basic_ack, recvAck_tag)
+        log.error("loss of information attribute, message: %s" % recvMsg)
+    else:
+        if postType == 'request':
+            # TODO: 测试
+            import requestMsg
+            rMsg = requestMsg.RequestMsg(
+                messageList['comment'], messageList['flag'])
+            replyMessage = rMsg.accept()
+        elif postType == 'message':
+            msgType = messageList['msg_body_type']
+            if msgType == 'Shared':
+                import messageShared
+                msgShared = messageShared.SharedMessage(messageList['user_id'],messageList['message'])
+                replyMessage = msgShared.sendMessage()
+            elif msgType == 'Document':
+                pass
+            elif msgType == 'Image':
+                pass
+            elif msgType == 'Record':
+                pass
+            elif msgType == 'Face':
+                pass
+            elif msgType == 'Shake':
+                pass
+            elif msgType == 'Location':
+                pass
+            elif msgType == 'Contact':
+                pass
+            elif msgType == 'Show':
+                pass
+            elif msgType == 'Text':
+                # TODO: 待测试
+                import message
+                if messageList['message'] == '':
+                    messageList['message'] = '你没有发送内容'
+                msgText = message.Message(
+                    messageList['user_id'], messageList['message'])
+                replyMessage = msgText.sendMessage()
+        log.info(
+            "deal message success, the message is: %s, will send to queue..." % replyMessage)
+        SendMsg(replyMessage, recvConn, recvChannel,
+                recvAck_tag, sender, queue, log)
 
 
 if __name__ == "__main__":

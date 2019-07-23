@@ -4,16 +4,18 @@ import requests
 import random
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
-import json
+import ast
+from message import Message
 
 
-class SharedMessage():
-    def __init__(self, tag, title, jumpUrl, user_id):
-        self.tag = tag
-        self.title = title
-        self.jumpUrl = jumpUrl
-        self.msg = None
-        self.user_id = user_id
+class SharedMessage(Message):
+    def __init__(self, user_id, msg):
+        super().__init__(user_id, msg)
+        msg = ast.literal_eval(str(self.msg))
+        print(msg)
+        self.tag = msg['SharedTag']
+        self.title = msg['SharedTitle']
+        self.jumpUrl = msg['SharedJumpurl']
 
     def buildHeader(self, url, hostname):
         agentlist = [
@@ -76,36 +78,51 @@ class SharedMessage():
             page = BeautifulSoup(page, 'lxml')
             videoAddress = (page.find('video')).get('src')
             analysisResult = True
+        # elif hostname == 'main.gcwduoduo.com':
+        #     page = BeautifulSoup(page, 'lxml')
+        #     print(page.find('video'))
+        #     videoAddress = (page.find('video')).get('src')
+        #     analysisResult = True
+        # elif hostname == 'www.boosj.com':
+        #     page = BeautifulSoup(page, 'lxml')
+        #     videoAddress = (page.find('video')).get('src')
+        #     analysisResult = True
+        # elif hostname == '52op.net':
+        #     page = BeautifulSoup(page, 'lxml')
+        #     videoAddress = (page.find('video')).get('src')
+        #     analysisResult = True
+        # elif hostname == 'm.baidu.com':
+        #     page = BeautifulSoup(page, 'lxml')
+        #     videoAddress = (page.find('video')).get('src')
+        #     analysisResult = True
         else:
             analysisResult = False
             videoAddress = ''
         return {"analysisResult": analysisResult, 'videoAddress': videoAddress}
 
     def dealMessage(self):
-        shortUrlResp = requests.get(self.jumpUrl, allow_redirects=False)
-        shortUrlCode = shortUrlResp.status_code
-        if shortUrlCode == 404:
-            self.msg = "你分享的内容无法打开"
+        if self.jumpUrl == '':
+            self.msg = "你的分享链接为空！"
         else:
-            if shortUrlCode == 302:
-                realUrl = shortUrlResp.headers['Location']
+            shortUrlResp = requests.get(self.jumpUrl, allow_redirects=False)
+            shortUrlCode = shortUrlResp.status_code
+            if shortUrlCode == 404:
+                self.msg = "你分享的内容无法打开"
             else:
-                realUrl = self.jumpUrl
-            hostname = (urlparse(realUrl)).hostname
-            headers = self.buildHeader(realUrl, hostname)
-            realUrlResp = requests.get(realUrl, headers=headers)
-            result = self.getVideoAddress(hostname, realUrlResp.text)
-            if result['analysisResult']:
-                self.msg = "分享内容： " + self.title + '\n' + "分享平台： " + \
-                    self.tag + "\n" + "视频链接: " + result['videoAddress']
-            else:
-                self.msg = "暂不支持解析你的分享"
+                if shortUrlCode == 302:
+                    realUrl = shortUrlResp.headers['Location']
+                else:
+                    realUrl = self.jumpUrl
+                hostname = (urlparse(realUrl)).hostname
+                headers = self.buildHeader(realUrl, hostname)
+                realUrlResp = requests.get(realUrl, headers=headers)
+                result = self.getVideoAddress(hostname, realUrlResp.text)
+                if result['analysisResult']:
+                    self.msg = "分享内容： " + self.title + '\n' + "分享平台： " + \
+                        self.tag + "\n" + "视频链接: " + result['videoAddress']
+                else:
+                    self.msg = "暂不支持解析你的分享"
 
     def sendMessage(self):
         self.dealMessage()
-        replyMessage = {"action": "send_private_msg",
-                        "params": {
-                            "user_id": self.user_id,
-                            "message": self.msg
-                        }}
-        return json.dumps(replyMessage)
+        return super().sendMessage()

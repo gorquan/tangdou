@@ -59,6 +59,7 @@ def setConfig(baseDir, filename):
 
 def outputMessage(ws, message):
     try:
+        print(message)
         message = formatMessage(message)
         log.info("format message success! the message is %s" % message)
         Thread(target=producer, args=(str(message), )).start()
@@ -137,58 +138,55 @@ def formatMessage(message):
                     messageJson['msg_body_type'] = 'Shared'
                     messagebody = (messagebody.split(',content='))[1]
                     messagebody = (messagebody.split(',title='))[0]
-                    messageJson['SharedTitle'] = (messagebody.split(',desc:'))[
-                        0].lstrip("{news:{title:")
-                    messageJson['SharedTag'] = (
-                        ((messagebody.split(',tag:'))[1]).split(',jumpUrl'))[0]
-                    messageJson['SharedJumpurl'] = (
-                        ((messagebody.split(',jumpUrl:'))[1]).split(',appid:'))[0]
+                    messageJson['message'] = {"SharedTitle": (messagebody.split(',desc:'))[0].lstrip("{news:{title:"), "SharedTag":
+                                              (((messagebody.split(',tag:'))[1]).split(',jumpUrl'))[0], "SharedJumpurl": (((messagebody.split(',jumpUrl:'))[1]).split(',appid:'))[0]}
                 # 文档
                 elif messagebody.startswith('CQ:rich,text='):
                     messageJson['msg_body_type'] = 'Document'
                     messagebody = messagebody.split(',')
-                    messageJson['DocumentText'] = messagebody[1].lstrip(
-                        'text=')
-                    messageJson['DocumentUrl'] = messagebody[2].lstrip('url=')
+                    messageJson['message'] = {"DocumentText": messagebody[1].lstrip(
+                        'text='), "DocumentUrl": messagebody[2].lstrip('url=')}
             # 图片
             elif messagebody.startswith('CQ:image'):
                 messageJson['msg_body_type'] = 'Image'
                 messagebody = messagebody.split(',')
-                messageJson['ImageFile'] = messagebody[1].lstrip('file=')
-                messageJson['ImageUrl'] = messagebody[2].lstrip('url=')
+                messageJson['message'] = {"ImageFile": messagebody[1].lstrip(
+                    'file='), "ImageUrl": messagebody[2].lstrip('url=')}
             # 语音
             elif messagebody.startswith('CQ:record'):
                 messageJson['msg_body_type'] = 'Record'
                 messagebody = messagebody.split(',')
-                messageJson['RecordFile'] = messagebody[1].lstrip('file=')
+                messageJson['message'] = {
+                    "RecordFile": messagebody[1].lstrip('file=')}
             # 大头贴
             elif messagebody.startswith('CQ:face') or messagebody.startswith('CQ:bface'):
                 messageJson['msg_body_type'] = 'Face'
                 messagebody = messagebody.split(',')
-                messageJson['FaceId'] = messagebody[1].lstrip('id=')
+                messageJson['message'] = {
+                    "FaceId": messagebody[1].lstrip('id=')}
             # 戳一戳
             elif messagebody.startswith('CQ:shake'):
                 messageJson['msg_body_type'] = 'Shake'
                 messagebody = messagebody.split(',')
-                messageJson['ShakeId'] = (messagebody[1]).lstrip('id=')
+                messageJson['message'] = {
+                    "ShakeId": (messagebody[1]).lstrip('id=')}
             # 地理位置
             elif messagebody.startswith('CQ:location'):
                 messageJson['msg_body_type'] = 'Location'
                 messagebody = messagebody.split(',')
-                messageJson['LocationContent'] = (
-                    messagebody[1]).lstrip('content=')
-                messageJson['LocationLat'] = (messagebody[2]).lstrip('lat=')
-                messageJson['LocationLon'] = (messagebody[3]).lstrip('lon=')
+                messageJson['message'] = {"LocationContent": (messagebody[1]).lstrip('content='), "LocationLat": (
+                    messagebody[2]).lstrip('lat='), "LocationLon": (messagebody[3]).lstrip('lon=')}
             # 名片
             elif messagebody.startswith('CQ:contact'):
                 messageJson['msg_body_type'] = 'Contact'
                 messagebody = messagebody.split(',')
-                messageJson['ContactId'] = (messagebody[1]).lstrip('id=')
-                messageJson['ContactType'] = (messagebody[2]).lstrip('type=')
+                messageJson['message'] = {"ContactId": (messagebody[1]).lstrip(
+                    'id='), "ContactType": (messagebody[2]).lstrip('type=')}
             elif messagebody.startswith('CQ:show'):
                 messageJson['msg_body_type'] = 'Show'
                 messagebody = messagebody.split(',')
-                messageJson['ShowId'] = (messagebody[2]).lstrip('id=')
+                messageJson['message'] = {
+                    'ShowId': (messagebody[2]).lstrip('id=')}
         # 其他不支持的信息视为文本信息
         else:
             messageJson['msg_body_type'] = 'Text'
@@ -196,7 +194,7 @@ def formatMessage(message):
     # 好友请求信息
     elif message['post_type'] == 'request':
         messageJson['comment'] = message['comment']
-        messageJson['flag'] == message['flag']
+        messageJson['flag'] = message['flag']
     # 其他信息
     else:
         pass
