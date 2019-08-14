@@ -6,6 +6,10 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 import ast
 from message import Message
+import json
+import html
+import urllib.parse
+from urllib.parse import parse_qs
 
 
 class SharedMessage(Message):
@@ -58,9 +62,11 @@ class SharedMessage(Message):
         ]
         agent = random.choice(agentlist)
         headers = {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
+            "Accept":
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
             "Accept-Encoding": "gzip, deflate, br",
-            "Accept-Language": "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6",
+            "Accept-Language":
+            "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6",
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
             "Host": hostname,
@@ -69,14 +75,22 @@ class SharedMessage(Message):
         }
         return headers
 
-    def getVideoAddress(self, hostname, page):
-        if hostname == 'share.tangdou.com':
-            page = BeautifulSoup(page, 'lxml')
+    def getVideoAddress(self, realurl):
+        hostname = (urlparse(realurl)).hostname
+        headers = self.buildHeader(realurl, hostname)
+        if hostname == 'share.tangdou.com' or hostname == 'm.9igcw.com':
+            realUrlResp = requests.get(realurl, headers=headers)
+            page = BeautifulSoup(realUrlResp.text)
             videoAddress = (page.find('video')).get('src')
             analysisResult = True
-        elif hostname == 'm.9igcw.com':
-            page = BeautifulSoup(page, 'lxml')
-            videoAddress = (page.find('video')).get('src')
+        elif hostname == 'm.baidu.com':
+            urlarray = json.loads(((parse_qs((urlparse(realurl)).query))['ext'])[0])
+            videoAddress = urlarray['src']
+            analysisResult = True
+        elif hostname == '52op.net':
+            videoID = ((
+                urlparse(realurl).path).lstrip('/video/')).rstrip('.html')
+            videoAddress = 'https://52op.net/flvData/d.aspx?id=' + videoID
             analysisResult = True
         # elif hostname == 'main.gcwduoduo.com':
         #     page = BeautifulSoup(page, 'lxml')
@@ -84,14 +98,6 @@ class SharedMessage(Message):
         #     videoAddress = (page.find('video')).get('src')
         #     analysisResult = True
         # elif hostname == 'www.boosj.com':
-        #     page = BeautifulSoup(page, 'lxml')
-        #     videoAddress = (page.find('video')).get('src')
-        #     analysisResult = True
-        # elif hostname == '52op.net':
-        #     page = BeautifulSoup(page, 'lxml')
-        #     videoAddress = (page.find('video')).get('src')
-        #     analysisResult = True
-        # elif hostname == 'm.baidu.com':
         #     page = BeautifulSoup(page, 'lxml')
         #     videoAddress = (page.find('video')).get('src')
         #     analysisResult = True
@@ -113,10 +119,7 @@ class SharedMessage(Message):
                     realUrl = shortUrlResp.headers['Location']
                 else:
                     realUrl = self.jumpUrl
-                hostname = (urlparse(realUrl)).hostname
-                headers = self.buildHeader(realUrl, hostname)
-                realUrlResp = requests.get(realUrl, headers=headers)
-                result = self.getVideoAddress(hostname, realUrlResp.text)
+                result = self.getVideoAddress(realUrl)
                 if result['analysisResult']:
                     self.msg = "分享内容： " + self.title + '\n' + "分享平台： " + \
                         self.tag + "\n" + "视频链接: " + result['videoAddress']

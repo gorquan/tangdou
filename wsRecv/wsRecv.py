@@ -134,9 +134,10 @@ def formatMessage(message):
     message = message.replace("'", '"')
     message = eval(message)
     messageJson['post_type'] = message['post_type']
-    messageJson['user_id'] = message['user_id']
     messageJson['time'] = message['time']
-    if message['post_type'] == 'message':
+    postType = message['post_type']
+    if postType == 'message':
+        messageJson['user_id'] = message['user_id']
         messageJson['message_type'] = message['message_type']
         messageJson['id'] = message['message_id']
         messagebody = message['message']
@@ -150,12 +151,12 @@ def formatMessage(message):
                 messagebody = (messagebody.split(',content='))[1]
                 messagebody = (messagebody.split(',title='))[0]
                 messageJson['message'] = {
-                    "SharedTitle": (messagebody.split(',desc:')
-                                    )[0].lstrip("{news:{title:"),
-                    "SharedTag": (((messagebody.split(',tag:'))[1]
-                                    ).split(',jumpUrl'))[0],
-                    "SharedJumpurl": (((messagebody.split(',jumpUrl:'))[1]
-                                        ).split(',appid:'))[0]
+                    "SharedTitle":
+                    (messagebody.split(',desc:'))[0].lstrip("{news:{title:"),
+                    "SharedTag":
+                    (((messagebody.split(',tag:'))[1]).split(',jumpUrl'))[0],
+                    "SharedJumpurl":
+                    (((messagebody.split(',jumpUrl:'))[1]).split(',appid:'))[0]
                 }
             # 文档
             elif messagebody.startswith('CQ:rich,text='):
@@ -248,9 +249,30 @@ def formatMessage(message):
             messageJson['msg_body_type'] = 'Text'
             messageJson['message'] = messagebody
     # 好友请求信息
-    elif message['post_type'] == 'request':
+    elif postType == 'request':
         messageJson['comment'] = message['comment']
         messageJson['flag'] = message['flag']
+        messageJson['request_type'] = message['request_type']
+        if message['request_type'] == 'friend':
+            messageJson['message'] = {"Request_ID": message['user_id']}
+        elif message['request_type'] == "group":
+            messageJson['message'] = {
+                "Group_ID": message['group_id'],
+                "Invite_ID": message['user_id']
+            }
+    # 通知消息
+    elif postType == 'notice':
+        messageJson['notice_type'] = message['notice_type']
+        # 群操作通知
+        if message['notice_type']  in ('group_decrease', 'group_increase'):
+            messageJson['message'] = {
+                "sub_type": message['sub_type'],
+                "group_id": message["group_id"],
+                "operator_id": message['operator_id'],
+                "process_id": message['process_id']
+            }
+        else:
+            pass
     # 其他信息
     else:
         pass

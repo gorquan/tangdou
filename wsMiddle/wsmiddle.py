@@ -125,6 +125,8 @@ def dealMsg(recvMsg, recvConn, recvChannel, recvAck_tag, sender, queue, log):
                 msgText = message.Message(
                     messageList['user_id'], messageList['message'])
                 replyMessage = msgText.sendMessage()
+        elif postType == 'notice':
+            pass
         log.info(
             "deal message success, the message is: %s, will send to queue..." % replyMessage)
         SendMsg(replyMessage, recvConn, recvChannel,
