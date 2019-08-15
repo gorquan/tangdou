@@ -15,9 +15,9 @@ class boosj(object):
     :param object: object
     """
     def __init__(self, url):
-        """docstring here
+        """boosj class init
         :param self: self 
-        :param url: 视频地址
+        :param url: 页面地址
         """
         self.video_id = None
         self.country = None
@@ -86,7 +86,7 @@ class boosj(object):
                 else:
                     continue
 
-    def getVideo(self):
+    def getVideoUrl(self):
         """获取播视广场舞视频文件链接
         :param self: self
         :param return: 返回ts文件列表链接
