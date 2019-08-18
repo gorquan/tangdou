@@ -9,6 +9,8 @@ from urllib.parse import urlparse
 import json
 import time
 
+# 思路 1.先访问http://gslb.boosj.com/ips.json，获取json 2. 根据第一步获取的json，构造第一部分参数，访问第一部分的json的glsb,获取json 3.根据第二部分获取的json，构造第二部分参数，访问第二部分json中的url，获取m3u8列表
+# 此处返回ts文件列表,还需要使用插件进行下载和合并
 
 class boosj(object):
     """获取播视广场舞视频类
@@ -17,7 +19,7 @@ class boosj(object):
     def __init__(self, url):
         """boosj class init
         :param self: self 
-        :param url: 页面地址
+        :param url: 视频页面地址
         """
         self.video_id = None
         self.country = None
@@ -34,6 +36,7 @@ class boosj(object):
         self.baseurl = url
         self.infoUrl = 'http://gslb.boosj.com/ips.json'
         self.tsList = set()
+        self.success = True
 
     def __getipsJson(self):
         """获取并构造第一部分参数
@@ -98,7 +101,7 @@ class boosj(object):
         self.__getipsJson()
         self.__getvideoUrl()
         self.__getvideoList()
-        return self.tsList
+        return {'success': self.success, 'videoUrl': self.tsList}
 
 
 class Headers(headers):
