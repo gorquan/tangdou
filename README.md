@@ -41,6 +41,7 @@
     - [ ] 群聊情况未处理
     - [ ] 视频类未加try except
     - [ ] 通知类信息报错
+    - [ ] 封装docker和编写执行脚本start.sh
     
 * 未来功能
     - [ ] 下载ts文件
@@ -49,7 +50,7 @@
     
 ##### 参与项目
 
-* 使用过程中出现问题、Bug或有其他意见建议，欢迎提issue
+* 使用过程中出现问题、Bug或有其他意见建议，欢迎提[issue](https://github.com/gorquan/tangdou/issues)
 * 如果有自己的想法并实现, 欢迎提pr
 
 ##### 感谢
